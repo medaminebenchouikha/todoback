@@ -7,6 +7,8 @@ const {mongoose} = require('./../db/config');
 
 const app=express();
 
+
+
 app.post('/register',(req,res)=>{
     // let age = req.params.age;
      let data = req.body;
@@ -25,7 +27,7 @@ app.post('/register',(req,res)=>{
     }).catch((error)=>{
         let key = Object.keys(error.keyPattern)[0];
        
-        res.status(400).send({message:key+" existant!"})
+        res.status(400).send({message:key})
        
     });
  });
@@ -45,13 +47,83 @@ app.post('/register',(req,res)=>{
         if(!campare){
             res.status(404).send({message:'password incorrect!'});
         }
-        let token = jwt.sign({idUser:result._id},'mySecretKey');
+        if(result.etat==0){
+            res.status(404).send({message:'your account not activated yet !'});
+        }
+
+        let token = jwt.sign({idUser:result._id,roleUser:result.role},'mySecretKey');
         res.status(200).send({token});
      }).catch((error)=>{
-        res.status(400).send(error)
+        res.status(400).send(error);
      })
     
  });
+
+ app.post('/activateUser/:idUser',(req,res)=>{
+    let _id=req.params.idUser;
+    let etat=1;
+    User.findByIdAndUpdate({_id},{etat}).then(
+        (result)=>{
+            console.log(result);
+            res.status(200).send(result);
+        }
+    ).catch(
+        (error)=>{
+            console.log(error);
+            res.status(400).send(error);
+
+        }
+    );
+});
+
+app.post('/desactivateUser/:idUser',(req,res)=>{
+    let _id=req.params.idUser;
+    let etat=0;
+    User.findByIdAndUpdate({_id},{etat}).then(
+        (result)=>{
+            console.log(result);
+            res.status(200).send(result);
+        }
+    ).catch(
+        (error)=>{
+            console.log(error);
+            res.status(400).send(error);
+        }
+    );
+});
+
+app.get('/list/:roleUser',(req,res)=>{
+    let roleUser=req.params.roleUser;
+    if(roleUser=='user') res.status(404).send({message:"you don't have permission to access this resource !"});
+    let role='user';
+    User.find({role}).then(
+        (result)=>{ 
+            
+            res.status(200).send(result);
+        }
+    ).catch(
+        (error)=>{
+            res.status(400).send({message:error});
+        }
+    );
+
+});
+
+app.delete('/delete/:idUser',(req,res)=>{
+    let _id=req.params.idUser;
+    User.findByIdAndRemove({_id}).then(
+        (result)=>{
+            console.log(result);
+            res.status(200).send(result);
+        }
+    ).catch(
+        (error)=>{
+            console.log(error);
+            res.status(400).send(error);
+        }
+    );
+
+})
 
 
  module.exports=app;
