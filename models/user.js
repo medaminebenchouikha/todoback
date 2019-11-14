@@ -22,6 +22,17 @@ const userSchema = new mongoose.Schema({
     password :{
         type : String,
         required : true
+    },
+    etat : {
+        type : Number,
+        default : 0
+    },
+    role : {
+        type : String,
+        default : "user"
+    },
+    photo : {
+        type : String
     }
 
 })
